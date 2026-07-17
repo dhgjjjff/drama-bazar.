@@ -144,14 +144,19 @@
 
             const bannerItems = trendingNow.length > 0 ? trendingNow : getUniqueSeries(filteredData).slice(0, 5);
 
-            // FIXED: Auto-sliding check logic correctly unblocks background loop
+            // FIXED: Solid, unbreakable auto-sliding loop structure
             useEffect(() => {
-                if (bannerItems.length === 0 || currentNav !== 'home' || currentPage !== 'main' || showSplash) return;
+                if (showSplash || bannerItems.length === 0 || currentNav !== 'home' || currentPage !== 'main') return;
+                
                 const interval = setInterval(() => {
-                    setSliderIndex((prev) => (prev + 1) % bannerItems.length);
+                    setSliderIndex((prevIndex) => {
+                        if (bannerItems.length === 0) return 0;
+                        return (prevIndex + 1) % bannerItems.length;
+                    });
                 }, 4000);
+                
                 return () => clearInterval(interval);
-            }, [bannerItems, currentNav, currentPage, showSplash]);
+            }, [bannerItems.length, currentNav, currentPage, showSplash]);
 
             useEffect(() => { if (window.lucide) { window.lucide.createIcons(); } }, [currentNav, currentPage, allContent, showProfileMenu, searchQuery, selectedSeason, showSplash, sliderIndex]);
 
@@ -365,7 +370,7 @@
                             h('div', { class: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
                                 animeSeriesAll.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
                                     h('div', { class: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
-                                        h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, class: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
+                                        h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, class: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-700' }),
                                         h('div', { class: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
                                     h('p', { class: 'mt-2.5 text-xs font-semibold truncate text-zinc-300 group-hover:text-white transition-colors' }, item.title)
