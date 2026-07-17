@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drama Bazar</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -110,7 +113,7 @@
                 item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())
             );
 
-            // ================= GLOBAL SMART FILTERING (FIXED FOR ALL CATEGORIES) =================
+            // ================= GLOBAL SMART FILTERING (FOR ALL CATEGORIES) =================
             const koreanDramas = getUniqueSeries(filteredData.filter(item => 
                 item.category === 'Korean Drama' || 
                 (item.title && item.title.toLowerCase().includes('korean')) ||
@@ -141,11 +144,16 @@
 
             const bannerItems = trendingNow.length > 0 ? trendingNow : getUniqueSeries(filteredData).slice(0, 5);
 
+            // FIXED AND REWRITTEN: Complete Bulletproof Auto-sliding Loop (Bina lock ke real-time scan karega)
             useEffect(() => {
-                if (bannerItems.length === 0 || currentNav !== 'home' || currentPage !== 'main' || !showSplash) return;
+                if (showSplash || currentNav !== 'home' || currentPage !== 'main') return;
+                
                 const interval = setInterval(() => {
-                    setSliderIndex((prev) => (prev + 1) % bannerItems.length);
+                    if (bannerItems.length > 1) {
+                        setSliderIndex((prevIndex) => (prevIndex + 1) % bannerItems.length);
+                    }
                 }, 4000);
+                
                 return () => clearInterval(interval);
             }, [bannerItems, currentNav, currentPage, showSplash]);
 
@@ -361,7 +369,7 @@
                             h('div', { class: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
                                 animeSeriesAll.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
                                     h('div', { class: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
-                                        h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, class: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
+                                        h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, class: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-700' }),
                                         h('div', { class: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
                                     h('p', { class: 'mt-2.5 text-xs font-semibold truncate text-zinc-300 group-hover:text-white transition-colors' }, item.title)
