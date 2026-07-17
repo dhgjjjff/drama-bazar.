@@ -114,23 +114,19 @@
             );
 
             // ================= MULTI-CATEGORY SMART FILTERING LOGIC =================
-            // 1. Korean Drama (Jo strict 'Korean Drama' hain, ya jinki title/tag mein kdrama ho)
             const koreanDramas = getUniqueSeries(filteredData.filter(item => 
                 item.category === 'Korean Drama' || 
                 (item.category === 'Trending' && item.title.toLowerCase().includes('korean')) ||
                 (item.category === 'Trending' && item.description.toLowerCase().includes('kdrama'))
             ));
 
-            // 2. Chinese Drama (Naya section filter)
             const chineseDramas = getUniqueSeries(filteredData.filter(item => 
                 item.category === 'Chinese Drama' || 
                 (item.category === 'Trending' && item.title.toLowerCase().includes('chinese')) ||
                 (item.category === 'Trending' && item.description.toLowerCase().includes('cdrama'))
             ));
 
-            // 3. Trending Now (Jo strict Trending hain, ya hum chahein toh sab mix dikha sakte hain)
             const trendingNow = getUniqueSeries(filteredData.filter(item => item.category === 'Trending'));
-            
             const animeSeriesAll = getUniqueSeries(filteredData.filter(item => item.category === 'Anime Series'));
             const moviesList = getUniqueSeries(filteredData.filter(item => item.category === 'Movies'));
             const unofficialDramas = getUniqueSeries(filteredData.filter(item => item.category === 'Unofficial Drama'));
@@ -168,6 +164,7 @@
 
             const isMovieMode = selectedContent && (selectedContent.category === 'Movies' || (selectedContent.title && selectedContent.title.toLowerCase().includes('movie')));
 
+            // RESTORED Original Splash Screen
             if (showSplash) {
                 return h('div', { class: `fixed inset-0 z-[9999] bg-[#040406] flex flex-col items-center justify-center ${isFading ? 'fade-out-splash' : ''}` },
                     h('div', { class: 'fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-green-900/20 via-[#040406] to-[#040406]' }),
@@ -325,7 +322,7 @@
                             )
                         ),
 
-                        // Korean Drama Section (Dono jagah ka content aayega)
+                        // Korean Drama Section
                         koreanDramas.length > 0 && h('div', { class: 'mt-8 px-5' },
                             h('div', { class: 'flex justify-between items-center mb-4' },
                                 h('h2', { class: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv', class: 'text-blue-500 w-3.5 h-3.5' }), 'Korean Drama'),
@@ -342,7 +339,7 @@
                             )
                         ),
 
-                        // Chinese Drama Section (Naya Section Added!)
+                        // FIXED: Chinese Drama Section Added to Home Page Layout!
                         chineseDramas.length > 0 && h('div', { class: 'mt-8 px-5' },
                             h('div', { class: 'flex justify-between items-center mb-4' },
                                 h('h2', { class: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv-2', class: 'text-red-400 w-3.5 h-3.5' }), 'Chinese Drama'),
