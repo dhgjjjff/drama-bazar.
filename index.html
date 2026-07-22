@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drama Bazar</title>
+
+    <!-- Monetag Main Script -->
+    <script src="https://5gvci.com/act/files/tag.min.js?zoneId=11371308" data-cfasync="false" async></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React and ReactDOM -->
@@ -14,8 +18,8 @@
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .premium-glass { background: rgba(18, 18, 22, 0.55); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .card-shadow { box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7); }
+        .premium-glass { background: rgba(18, 18, 22, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .card-shadow { box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8); }
         
         .fade-out-splash {
             animation: fadeOut 0.5s ease-in-out forwards;
@@ -26,13 +30,20 @@
         }
     </style>
 </head>
-<body class="bg-[#040406] text-white font-sans antialiased">
+<body class="bg-[#040406] text-white font-sans antialiased selection:bg-green-500 selection:text-black">
 
     <div id="root"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Register Monetag Service Worker for Push Notifications
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Monetag SW registered!', reg))
+                .catch(err => console.log('Monetag SW failed:', err));
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyBtg0Np6be7dRKtXSumGM3oNCVvLZdtY38",
@@ -95,7 +106,7 @@
 
             useEffect(() => {
                 if (selectedContent) {
-                    setSelectedSeason(selectedContent.season || '1');
+                    setSelectedSeason(String(selectedContent.season || '1'));
                 }
             }, [selectedContent]);
 
@@ -113,7 +124,7 @@
                 item.title && item.title.toLowerCase().includes(searchQuery.toLowerCase())
             );
 
-            // ================= GLOBAL SMART FILTERING (FOR ALL CATEGORIES) =================
+            // ================= GLOBAL SMART FILTERING =================
             const koreanDramas = getUniqueSeries(filteredData.filter(item => 
                 item.category === 'Korean Drama' || 
                 (item.title && item.title.toLowerCase().includes('korean')) ||
@@ -144,27 +155,28 @@
 
             const bannerItems = trendingNow.length > 0 ? trendingNow : getUniqueSeries(filteredData).slice(0, 5);
 
-            // FIXED AND REWRITTEN: Complete Bulletproof Auto-sliding Loop (Bina lock ke real-time scan karega)
             useEffect(() => {
-                if (showSplash || currentNav !== 'home' || currentPage !== 'main') return;
+                if (showSplash || currentNav !== 'home' || currentPage !== 'main' || bannerItems.length <= 1) return;
                 
                 const interval = setInterval(() => {
-                    if (bannerItems.length > 1) {
-                        setSliderIndex((prevIndex) => (prevIndex + 1) % bannerItems.length);
-                    }
+                    setSliderIndex((prevIndex) => (prevIndex + 1) % bannerItems.length);
                 }, 4000);
                 
                 return () => clearInterval(interval);
-            }, [bannerItems, currentNav, currentPage, showSplash]);
+            }, [bannerItems.length, currentNav, currentPage, showSplash]);
 
-            useEffect(() => { if (window.lucide) { window.lucide.createIcons(); } }, [currentNav, currentPage, allContent, showProfileMenu, searchQuery, selectedSeason, showSplash, sliderIndex]);
+            useEffect(() => { 
+                if (window.lucide) { 
+                    window.lucide.createIcons(); 
+                } 
+            }, [currentNav, currentPage, allContent, showProfileMenu, searchQuery, selectedSeason, showSplash, sliderIndex]);
 
             const getAvailableSeasons = () => {
                 if (!selectedContent) return [];
                 const seasons = allContent
                     .filter(item => item.seriesId === selectedContent.seriesId)
-                    .map(item => item.season || '1');
-                return [...new Set(seasons)].sort((a, b) => a - b);
+                    .map(item => String(item.season || '1'));
+                return [...new Set(seasons)].sort((a, b) => Number(a) - Number(b));
             };
 
             const isMovieMode = selectedContent && (selectedContent.category === 'Movies' || (selectedContent.title && selectedContent.title.toLowerCase().includes('movie')));
@@ -187,15 +199,15 @@
 
                 // POPUP FULL VIDEO PLAYER
                 currentPage === 'player' && selectedContent ? h('div', { class: 'fixed inset-0 bg-[#040406] z-[100] flex flex-col overflow-y-auto no-scrollbar', onClick: (e) => e.stopPropagation() },
-                    h('div', { class: 'p-4 flex items-center gap-4 bg-black/60 sticky top-0 backdrop-blur-md z-10 border-b border-zinc-900' },
-                        h('button', { onClick: () => setCurrentPage('main'), class: 'p-2 bg-zinc-900/80 rounded-full border border-zinc-800' }, h('i', { 'data-lucide': 'arrow-left', class: 'w-5 h-5' })),
+                    h('div', { class: 'p-4 flex items-center gap-4 bg-black/80 sticky top-0 backdrop-blur-md z-10 border-b border-zinc-900' },
+                        h('button', { onClick: () => { setCurrentPage('main'); setSelectedContent(null); }, class: 'p-2 bg-zinc-900/80 rounded-full border border-zinc-800 hover:bg-zinc-800 transition-colors' }, h('i', { 'data-lucide': 'arrow-left', class: 'w-5 h-5' })),
                         h('div', null,
-                            h('h2', { class: 'font-bold text-sm text-zinc-100' }, selectedContent.title),
+                            h('h2', { class: 'font-bold text-sm text-zinc-100 truncate max-w-[250px]' }, selectedContent.title),
                             h('p', { class: 'text-[10px] text-green-400 font-semibold' }, isMovieMode ? 'Full Movie Mode' : 'Season ' + selectedContent.season + ' | Episode ' + selectedContent.episode)
                         )
                     ),
-                    h('div', { class: 'w-full aspect-video bg-black' },
-                        h('div', { class: 'w-full h-full shadow-2xl', dangerouslySetInnerHTML: { __html: selectedContent.embed } })
+                    h('div', { class: 'w-full aspect-video bg-black shadow-2xl' },
+                        h('div', { class: 'w-full h-full', dangerouslySetInnerHTML: { __html: selectedContent.embed } })
                     ),
                     h('div', { class: 'p-6 flex-1' },
                         
@@ -226,9 +238,9 @@
                             ),
 
                             h('h3', { class: 'text-xs font-black tracking-widest text-zinc-500 uppercase mb-4 flex items-center gap-2' }, h('i', { 'data-lucide': 'layers', class: 'w-4 h-4 text-green-500' }), 'Select Episode'),
-                            h('div', { class: 'grid grid-cols-4 gap-3' }, 
+                            h('div', { class: 'grid grid-cols-4 sm:grid-cols-6 gap-3' }, 
                                 allContent.filter(item => item.seriesId === selectedContent.seriesId && String(item.season || '1') === String(selectedSeason))
-                                .sort((a, b) => a.episode - b.episode)
+                                .sort((a, b) => Number(a.episode) - Number(b.episode))
                                 .map(ep => h('button', { 
                                     key: ep.id,
                                     onClick: () => setSelectedContent(ep),
@@ -241,9 +253,10 @@
 
                 // HEADER SECTION
                 currentPage === 'main' ? h('div', null,
-                    h('header', { class: 'p-5 flex justify-between items-center sticky top-0 backdrop-blur-md bg-[#040406]/60 z-40' },
+                    h('header', { class: 'p-5 flex justify-between items-center sticky top-0 backdrop-blur-md bg-[#040406]/70 z-40' },
                         h('h1', { 
-                            class: 'text-2xl font-black italic text-green-500 tracking-tighter drop-shadow-[0_0_15px_rgba(34,197,94,0.7)]' 
+                            class: 'text-2xl font-black italic text-green-500 tracking-tighter drop-shadow-[0_0_15px_rgba(34,197,94,0.7)] cursor-pointer',
+                            onClick: () => { setCurrentNav('home'); setSearchQuery(''); }
                         }, 'DRAMA BAZAR'),
                         h('div', { class: 'relative' },
                             h('div', { 
@@ -252,7 +265,7 @@
                             }, 
                                 h('img', { src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix' })
                             ),
-                            showProfileMenu ? h('div', { class: 'absolute right-0 mt-3 w-56 premium-glass rounded-2xl p-2 shadow-2xl border border-zinc-800/50 z-50' },
+                            showProfileMenu ? h('div', { class: 'absolute right-0 mt-3 w-56 premium-glass rounded-2xl p-2 shadow-2xl border border-zinc-800/50 z-50 animate-in fade-in zoom-in-95 duration-150' },
                                 h('a', { href: '#', class: 'flex items-center gap-3 p-3 text-xs font-semibold text-zinc-300 hover:bg-zinc-800/50 rounded-xl transition-all' }, h('i', { 'data-lucide': 'heart', class: 'w-4 h-4 text-red-500' }), 'My Fav Drama'),
                                 h('a', { href: '#', class: 'flex items-center gap-3 p-3 text-xs font-semibold text-zinc-300 hover:bg-zinc-800/50 rounded-xl transition-all' }, h('i', { 'data-lucide': 'history', class: 'w-4 h-4 text-blue-400' }), 'History'),
                                 h('a', { href: 'mailto:support@dramabazar.com', class: 'flex items-center gap-3 p-3 text-xs font-semibold text-zinc-300 hover:bg-zinc-800/50 rounded-xl transition-all' }, h('i', { 'data-lucide': 'mail', class: 'w-4 h-4 text-yellow-500' }), 'Feedback Email'),
@@ -280,7 +293,6 @@
                     // ================= PAGE 1: HOME PAGE =================
                     currentNav === 'home' ? h('div', null,
                         
-                        // AUTOMATIC SLIDING HERO BANNER
                         currentSliderItem && !searchQuery && h('div', { class: 'px-5 py-3' },
                             h('div', { 
                                 onClick: () => { setSelectedContent(currentSliderItem); setCurrentPage('player'); },
@@ -296,7 +308,7 @@
                                 h('div', { class: 'absolute bottom-4 left-5 right-5' },
                                     h('span', { class: 'bg-green-500 text-black font-black text-[9px] uppercase px-2 py-0.5 rounded-md tracking-wider shadow-lg shadow-green-500/20' }, 'Trending Spot'),
                                     h('h3', { class: 'text-base font-black text-white mt-1.5 truncate drop-shadow-md' }, currentSliderItem.title),
-                                    h('p', { class: 'text-[10px] text-zinc-400 font-medium' }, currentSliderItem.description)
+                                    h('p', { class: 'text-[10px] text-zinc-400 font-medium line-clamp-1' }, currentSliderItem.description)
                                 ),
 
                                 h('div', { class: 'absolute top-4 right-5 flex gap-1.5 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-zinc-800' },
@@ -467,7 +479,7 @@
                         koreanDramas.length === 0 && h('div', { class: 'text-center py-20 text-zinc-600 text-xs' }, 'No Korean Drama found.')
                     ) : null,
 
-                    // ================= NEW PAGE: CHINESE DRAMA PAGE =================
+                    // ================= PAGE 4: CHINESE DRAMA PAGE =================
                     currentNav === 'cdrama' ? h('div', null,
                         chineseDramas.length > 0 && h('div', { class: 'mt-6 px-5' },
                             h('h2', { class: 'text-xs font-black mb-4 uppercase tracking-widest text-red-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv-2', class: 'w-3.5 h-3.5' }), 'All Chinese Dramas'),
@@ -483,7 +495,7 @@
                         chineseDramas.length === 0 && h('div', { class: 'text-center py-20 text-zinc-600 text-xs' }, 'No Chinese Drama found.')
                     ) : null,
 
-                    // ================= PAGE 4: SPECIAL DRAMA PAGE =================
+                    // ================= PAGE 5: SPECIAL DRAMA PAGE =================
                     currentNav === 'special' ? h('div', null,
                         specialMovies.length > 0 && h('div', { class: 'mt-6 px-5' },
                             h('h2', { class: 'text-xs font-black mb-4 uppercase tracking-widest text-pink-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'film', class: 'w-3.5 h-3.5' }), 'Movies Corner'),
