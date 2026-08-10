@@ -28,11 +28,18 @@
 
         <!-- Add / Edit Form -->
         <div class="premium-glass rounded-3xl p-6 mb-10 border border-zinc-800 shadow-2xl">
-            <h2 class="text-lg font-black text-zinc-200 mb-6 flex items-center gap-2 uppercase tracking-wider">
-                <i data-lucide="plus-circle" class="text-green-500 w-5 h-5"></i> Add New Content / Movie / Series
-            </h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="formTitle" class="text-lg font-black text-zinc-200 flex items-center gap-2 uppercase tracking-wider">
+                    <i data-lucide="plus-circle" class="text-green-500 w-5 h-5"></i> Add New Content / Movie / Series
+                </h2>
+                <button type="button" id="cancelEditBtn" onclick="resetFormState()" class="hidden text-xs text-amber-400 hover:underline font-bold">
+                    Cancel Editing
+                </button>
+            </div>
 
             <form id="contentForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="hidden" id="editDocId" value="">
+
                 <div>
                     <label class="block text-xs font-bold text-zinc-400 mb-1">Title *</label>
                     <input type="text" id="title" required placeholder="e.g. All of Us Are Dead" class="w-full bg-[#121215] border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-green-500">
@@ -111,7 +118,7 @@
     <!-- Firebase Script -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBtg0Np6be7dRKtXSumGM3oNCVvLZdtY38",
@@ -128,42 +135,54 @@
         const contentForm = document.getElementById('contentForm');
         const contentList = document.getElementById('contentList');
         const totalCount = document.getElementById('totalCount');
+        let globalDocsMap = {};
 
         if (window.lucide) window.lucide.createIcons();
 
+        // Save / Update Data in Firebase
         contentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
+            const editDocId = document.getElementById('editDocId').value;
+
             submitBtn.disabled = true;
-            submitBtn.innerText = "Publishing...";
+            submitBtn.innerText = editDocId ? "Updating..." : "Publishing...";
+
+            const payload = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                img: document.getElementById('img').value,
+                seriesId: document.getElementById('seriesId').value,
+                lang: document.getElementById('lang').value,
+                season: document.getElementById('season').value,
+                episode: document.getElementById('episode').value,
+                description: document.getElementById('description').value,
+                embed: document.getElementById('embed').value,
+                updatedAt: new Date().toISOString()
+            };
 
             try {
-                await addDoc(collection(db, "movies"), {
-                    title: document.getElementById('title').value,
-                    category: document.getElementById('category').value,
-                    img: document.getElementById('img').value,
-                    seriesId: document.getElementById('seriesId').value,
-                    lang: document.getElementById('lang').value,
-                    season: document.getElementById('season').value,
-                    episode: document.getElementById('episode').value,
-                    description: document.getElementById('description').value,
-                    embed: document.getElementById('embed').value,
-                    createdAt: new Date().toISOString()
-                });
-
-                alert("✅ Success! Item added to Drama Bazar.");
-                contentForm.reset();
+                if (editDocId) {
+                    await updateDoc(doc(db, "movies", editDocId), payload);
+                    alert("✅ Success! Item updated.");
+                } else {
+                    payload.createdAt = new Date().toISOString();
+                    await addDoc(collection(db, "movies"), payload);
+                    alert("✅ Success! Item added to Drama Bazar.");
+                }
+                resetFormState();
             } catch (err) {
-                alert("❌ Error adding item: " + err.message);
+                alert("❌ Error: " + err.message);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = "Publish Drama / Movie";
-                if (window.lucide) window.lucide.createIcons();
             }
         });
 
+        // Load & Realtime Read Firebase Data
         onSnapshot(collection(db, "movies"), (snapshot) => {
             totalCount.innerText = snapshot.docs.length;
+            globalDocsMap = {};
+
             if (snapshot.empty) {
                 contentList.innerHTML = `<p class="text-zinc-600 text-xs text-center py-6">No entries in database yet.</p>`;
                 return;
@@ -172,6 +191,8 @@
             let html = '';
             snapshot.forEach((docSnap) => {
                 const data = docSnap.data();
+                globalDocsMap[docSnap.id] = data;
+
                 html += `
                     <div class="flex items-center justify-between p-3.5 bg-[#121215] border border-zinc-800/80 rounded-2xl">
                         <div class="flex items-center gap-3 overflow-hidden">
@@ -181,15 +202,57 @@
                                 <p class="text-[10px] text-zinc-500 mt-0.5">${data.category} | S${data.season} E${data.episode} | ${data.lang}</p>
                             </div>
                         </div>
-                        <button onclick="deleteItem('${docSnap.id}')" class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-xl text-xs font-bold transition-all ml-2 flex-shrink-0">
-                            Delete
-                        </button>
+                        <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                            <button onclick="editItem('${docSnap.id}')" class="px-3 py-1.5 bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-black rounded-xl text-xs font-bold transition-all">
+                                Edit
+                            </button>
+                            <button onclick="deleteItem('${docSnap.id}')" class="px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-xl text-xs font-bold transition-all">
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 `;
             });
             contentList.innerHTML = html;
         });
 
+        // Edit Item Populate
+        window.editItem = (id) => {
+            const data = globalDocsMap[id];
+            if (!data) return;
+
+            document.getElementById('editDocId').value = id;
+            document.getElementById('title').value = data.title || '';
+            document.getElementById('category').value = data.category || 'Trending';
+            document.getElementById('img').value = data.img || '';
+            document.getElementById('seriesId').value = data.seriesId || '';
+            document.getElementById('lang').value = data.lang || 'Hindi Dubbed';
+            document.getElementById('season').value = data.season || 1;
+            document.getElementById('episode').value = data.episode || 1;
+            document.getElementById('description').value = data.description || '';
+            document.getElementById('embed').value = data.embed || '';
+
+            document.getElementById('formTitle').innerHTML = `<i data-lucide="edit" class="text-amber-400 w-5 h-5"></i> Edit Content Details`;
+            document.getElementById('submitBtn').innerHTML = `<i data-lucide="check-circle" class="w-5 h-5"></i> Update Drama / Movie`;
+            document.getElementById('submitBtn').className = "w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-black font-black py-4 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wider";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        // Reset Form State
+        window.resetFormState = () => {
+            contentForm.reset();
+            document.getElementById('editDocId').value = '';
+            document.getElementById('formTitle').innerHTML = `<i data-lucide="plus-circle" class="text-green-500 w-5 h-5"></i> Add New Content / Movie / Series`;
+            document.getElementById('submitBtn').innerHTML = `<i data-lucide="upload-cloud" class="w-5 h-5"></i> Publish Drama / Movie`;
+            document.getElementById('submitBtn').className = "w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-black font-black py-4 rounded-xl shadow-lg shadow-green-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wider";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        // Delete Function Global Expose
         window.deleteItem = async (id) => {
             if (confirm("Are you sure you want to delete this drama/episode?")) {
                 try {
