@@ -24,6 +24,32 @@
         .premium-glass { background: rgba(18, 18, 22, 0.65); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .card-shadow { box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8); }
         
+        /* GLOWING NEON BORDER STYLES */
+        .glow-cyan {
+            border: 2px solid #38bdf8 !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6), inset 0 0 10px rgba(56, 189, 248, 0.3) !important;
+        }
+        .glow-pink {
+            border: 2px solid #f43f5e !important;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.6), inset 0 0 10px rgba(244, 63, 94, 0.3) !important;
+        }
+        .glow-green {
+            border: 2px solid #a3e635 !important;
+            box-shadow: 0 0 15px rgba(163, 230, 53, 0.6), inset 0 0 10px rgba(163, 230, 53, 0.3) !important;
+        }
+        .glow-yellow {
+            border: 2px solid #facc15 !important;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.6), inset 0 0 10px rgba(250, 204, 21, 0.3) !important;
+        }
+        .glow-purple {
+            border: 2px solid #c084fc !important;
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.6), inset 0 0 10px rgba(192, 132, 252, 0.3) !important;
+        }
+        .glow-orange {
+            border: 2px solid #fb923c !important;
+            box-shadow: 0 0 15px rgba(251, 146, 60, 0.6), inset 0 0 10px rgba(251, 146, 60, 0.3) !important;
+        }
+
         .fade-out-splash {
             animation: fadeOut 0.5s ease-in-out forwards;
         }
@@ -63,6 +89,11 @@
         const h = React.createElement;
 
         const DEFAULT_POSTER = "https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=500&auto=format&fit=crop";
+
+        // ARRAY OF GLOW CLASSES
+        const GLOW_CLASSES = ['glow-cyan', 'glow-pink', 'glow-green', 'glow-yellow', 'glow-purple', 'glow-orange'];
+
+        const getGlowClass = (index) => GLOW_CLASSES[index % GLOW_CLASSES.length];
 
         function UserApp() {
             const [showSplash, setShowSplash] = useState(true);
@@ -316,7 +347,7 @@
                         currentSliderItem && !searchQuery && h('div', { className: 'px-5 py-3' },
                             h('div', { 
                                 onClick: () => { setSelectedContent(currentSliderItem); setCurrentPage('player'); },
-                                className: 'w-full h-48 relative rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 card-shadow group'
+                                className: `w-full h-48 relative rounded-3xl overflow-hidden cursor-pointer card-shadow group transition-all ${getGlowClass(0)}`
                             },
                                 h('img', { 
                                     src: currentSliderItem.img, 
@@ -343,9 +374,9 @@
                                 h('h2', { className: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'flame', className: 'text-orange-500 w-3.5 h-3.5' }), 'Trending Now'),
                                 h('button', { onClick: () => setCurrentNav('movies'), className: 'text-[11px] font-bold text-green-500 hover:text-green-400 flex items-center gap-0.5 transition-colors' }, 'More', h('i', { 'data-lucide': 'chevron-right', className: 'w-3 h-3' }))
                             ),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                trendingNow.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                trendingNow.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
                                         h('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent' }),
                                         h('div', { className: 'absolute top-2 left-2 bg-black/80 backdrop-blur-md text-[9px] px-2 py-0.5 rounded-lg border border-zinc-800 text-zinc-200 font-bold tracking-wide' }, item.lang)
@@ -360,9 +391,9 @@
                                 h('h2', { className: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv', className: 'text-blue-500 w-3.5 h-3.5' }), 'Korean Drama'),
                                 h('button', { onClick: () => setCurrentNav('kdrama'), className: 'text-[11px] font-bold text-green-500 hover:text-green-400 flex items-center gap-0.5 transition-colors' }, 'More', h('i', { 'data-lucide': 'chevron-right', className: 'w-3 h-3' }))
                             ),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                koreanDramas.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                koreanDramas.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 1)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
                                         h('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
@@ -376,9 +407,9 @@
                                 h('h2', { className: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv-2', className: 'text-red-400 w-3.5 h-3.5' }), 'Chinese Drama'),
                                 h('button', { onClick: () => setCurrentNav('cdrama'), className: 'text-[11px] font-bold text-green-500 hover:text-green-400 flex items-center gap-0.5 transition-colors' }, 'More', h('i', { 'data-lucide': 'chevron-right', className: 'w-3 h-3' }))
                             ),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                chineseDramas.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                chineseDramas.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 2)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
                                         h('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
@@ -392,9 +423,9 @@
                                 h('h2', { className: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'clapperboard', className: 'text-purple-500 w-3.5 h-3.5' }), 'Anime Series'),
                                 h('button', { onClick: () => setCurrentNav('anime'), className: 'text-[11px] font-bold text-green-500 hover:text-green-400 flex items-center gap-0.5 transition-colors' }, 'More', h('i', { 'data-lucide': 'chevron-right', className: 'w-3 h-3' }))
                             ),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                animeSeriesAll.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                animeSeriesAll.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 3)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-700' }),
                                         h('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
@@ -408,9 +439,9 @@
                                 h('h2', { className: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'film', className: 'text-cyan-500 w-3.5 h-3.5' }), 'Movies'),
                                 h('button', { onClick: () => setCurrentNav('movies'), className: 'text-[11px] font-bold text-green-500 hover:text-green-400 flex items-center gap-0.5 transition-colors' }, 'More', h('i', { 'data-lucide': 'chevron-right', className: 'w-3 h-3' }))
                             ),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                moviesList.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                moviesList.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 4)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
                                         h('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
@@ -424,9 +455,9 @@
                                 h('h2', { className: 'text-xs font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'alert-circle', className: 'text-pink-500 w-3.5 h-3.5' }), 'Unofficial Drama'),
                                 h('button', { onClick: () => setCurrentNav('movies'), className: 'text-[11px] font-bold text-green-500 hover:text-green-400 flex items-center gap-0.5 transition-colors' }, 'More', h('i', { 'data-lucide': 'chevron-right', className: 'w-3 h-3' }))
                             ),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                unofficialDramas.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-900 group-hover:border-green-500/80 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                unofficialDramas.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 5)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' }),
                                         h('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent' })
                                     ),
@@ -440,9 +471,9 @@
                     currentNav === 'anime' ? h('div', null,
                         animeForYou.length > 0 && h('div', { className: 'mt-6 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-purple-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'sparkles', className: 'w-3.5 h-3.5' }), 'For You (Anime)'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                animeForYou.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-purple-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                animeForYou.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-semibold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -451,9 +482,9 @@
                         ),
                         animeNew.length > 0 && h('div', { className: 'mt-8 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-purple-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'clock', className: 'w-3.5 h-3.5' }), 'New Anime (Hindi)'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                animeNew.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-purple-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                animeNew.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 1)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-bold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -462,9 +493,9 @@
                         ),
                         animeMovies.length > 0 && h('div', { className: 'mt-8 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-purple-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'film', className: 'w-3.5 h-3.5' }), 'Anime Movie'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                animeMovies.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-purple-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                animeMovies.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 2)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-semibold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -477,9 +508,9 @@
                     currentNav === 'kdrama' ? h('div', null,
                         koreanDramas.length > 0 && h('div', { className: 'mt-6 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-blue-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv', className: 'w-3.5 h-3.5' }), 'All Korean Dramas'),
-                            h('div', { className: 'grid grid-cols-2 gap-4 py-1' },
-                                koreanDramas.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-blue-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'grid grid-cols-2 gap-4 py-2' },
+                                koreanDramas.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-bold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -492,9 +523,9 @@
                     currentNav === 'cdrama' ? h('div', null,
                         chineseDramas.length > 0 && h('div', { className: 'mt-6 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-red-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'tv-2', className: 'w-3.5 h-3.5' }), 'All Chinese Dramas'),
-                            h('div', { className: 'grid grid-cols-2 gap-4 py-1' },
-                                chineseDramas.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-red-400 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'grid grid-cols-2 gap-4 py-2' },
+                                chineseDramas.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-bold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -507,9 +538,9 @@
                     currentNav === 'movies' ? h('div', null,
                         trendingMovies.length > 0 && h('div', { className: 'mt-6 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-cyan-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'flame', className: 'w-3.5 h-3.5' }), 'Trending Movie'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                trendingMovies.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-cyan-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                trendingMovies.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-semibold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -519,9 +550,9 @@
 
                         hollywoodMovies.length > 0 && h('div', { className: 'mt-8 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-amber-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'globe', className: 'w-3.5 h-3.5' }), 'Hollywood Movie'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                hollywoodMovies.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-amber-400 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                hollywoodMovies.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 1)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-bold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -531,9 +562,9 @@
 
                         southMovies.length > 0 && h('div', { className: 'mt-8 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-emerald-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'film', className: 'w-3.5 h-3.5' }), 'South Movie'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                southMovies.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-emerald-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                southMovies.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 2)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-semibold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -543,9 +574,9 @@
 
                         shortDramas.length > 0 && h('div', { className: 'mt-8 px-5' },
                             h('h2', { className: 'text-xs font-black mb-4 uppercase tracking-widest text-pink-400 flex items-center gap-2' }, h('i', { 'data-lucide': 'zap', className: 'w-3.5 h-3.5' }), 'Short Drama'),
-                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-1' },
-                                shortDramas.map(item => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, className: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
-                                    h('div', { className: 'relative rounded-2xl overflow-hidden border border-zinc-950 group-hover:border-pink-500 transition-all card-shadow bg-zinc-900 aspect-video' },
+                            h('div', { className: 'flex gap-4 overflow-x-auto no-scrollbar py-2 px-1' },
+                                shortDramas.map((item, idx) => h('div', { key: item.id, onClick: () => { setSelectedContent(item); setCurrentPage('player'); }, class: 'min-w-[170px] max-w-[170px] cursor-pointer group' },
+                                    h('div', { className: `relative rounded-2xl overflow-hidden transition-all card-shadow bg-zinc-900 aspect-video ${getGlowClass(idx + 3)}` },
                                         h('img', { src: item.img, onError: (e) => { e.target.src = DEFAULT_POSTER; }, className: 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' })
                                     ),
                                     h('p', { className: 'mt-2 text-xs font-semibold truncate text-zinc-300 group-hover:text-white' }, item.title)
@@ -553,7 +584,7 @@
                             )
                         ),
 
-                        trendingMovies.length === 0 && hollywoodMovies.length === 0 && southMovies.length === 0 && shortDramas.length === 0 && h('div', { className: 'text-center py-20 text-zinc-600 text-xs' }, 'No movies found.')
+                        trendingMovies.length === 0 && hollywoodMovies.length === 0 && southMovies.length === 0 && shortDramas.length === 0 && h('div', { class: 'text-center py-20 text-zinc-600 text-xs' }, 'No movies found.')
                     ) : null
                 ) : null,
 
