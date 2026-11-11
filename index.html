@@ -73,10 +73,10 @@
             const [selectedSeason, setSelectedSeason] = useState('1'); 
             const [sliderIndex, setSliderIndex] = useState(0);
 
-            // SERVER SELECTION: 'server1' (Abyss) OR 'server2' (Xcloud)
+            // MULTI-SERVER STATE: 'server1' (Abyss) OR 'server2' (Xcloud)
             const [activeServer, setActiveServer] = useState('server1');
 
-            // Watchlist
+            // Watchlist / Favorites
             const [favorites, setFavorites] = useState(() => {
                 const saved = localStorage.getItem('db_favs');
                 return saved ? JSON.parse(saved) : [];
@@ -118,7 +118,7 @@
                                 episode: data.episode || "1",
                                 season: data.season || "1",
                                 embed: data.embed || "",
-                                embed2: data.embed2 || "",
+                                embed2: data.embed2 || "", // Server 2 (Xcloud)
                                 description: data.description || "Coming soon on Drama Bazar"
                             }); 
                         }
@@ -131,7 +131,7 @@
             useEffect(() => {
                 if (selectedContent) {
                     setSelectedSeason(String(selectedContent.season || '1'));
-                    setActiveServer('server1');
+                    setActiveServer('server1'); // Default back to Server 1 on change
                 }
             }, [selectedContent]);
 
@@ -206,7 +206,7 @@
 
             useEffect(() => { 
                 if (window.lucide) window.lucide.createIcons(); 
-            }, [currentNav, currentPage, allContent, showProfileMenu, searchQuery, selectedSeason, showSplash, sliderIndex, favorites, activeServer, selectedContent]);
+            }, [currentNav, currentPage, allContent, showProfileMenu, searchQuery, selectedSeason, showSplash, sliderIndex, favorites, activeServer]);
 
             const getAvailableSeasons = () => {
                 if (!selectedContent) return [];
@@ -224,13 +224,13 @@
                 (selectedContent.title && selectedContent.title.toLowerCase().includes('movie'))
             );
 
-            // ACTIVE EMBED COMPUTATION
+            // SELECT EMBED ACCORDING TO SERVER
             const getActiveEmbed = () => {
                 if (!selectedContent) return "";
                 if (activeServer === 'server2' && selectedContent.embed2 && selectedContent.embed2.trim() !== "") {
                     return selectedContent.embed2;
                 }
-                return selectedContent.embed || "";
+                return selectedContent.embed;
             };
 
             if (showSplash) {
@@ -264,7 +264,7 @@
             return h('div', { className: 'min-h-screen pb-32 relative animate-in fade-in duration-700', onClick: () => setShowProfileMenu(false) },
                 h('div', { className: 'fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/40 via-[#040406] to-[#040406] -z-10' }),
 
-                // PLAYER SCREEN WITH MULTI-SERVER ALWAYS VISIBLE
+                // PLAYER SCREEN WITH MULTI-SERVER CONTROLS
                 currentPage === 'player' && selectedContent ? h('div', { className: 'fixed inset-0 bg-[#040406] z-[100] flex flex-col overflow-y-auto no-scrollbar', onClick: (e) => e.stopPropagation() },
                     h('div', { className: 'p-4 flex items-center justify-between bg-black/80 sticky top-0 backdrop-blur-md z-10 border-b border-zinc-900' },
                         h('div', { className: 'flex items-center gap-4' },
@@ -283,40 +283,33 @@
                         )
                     ),
 
-                    // VIDEO FRAME
+                    // VIDEO EMBED PLAYER
                     h('div', { className: 'w-full aspect-video bg-black shadow-2xl relative' },
-                        h('div', { 
-                            key: `${selectedContent.id}-${activeServer}`, 
-                            className: 'w-full h-full', 
-                            dangerouslySetInnerHTML: { __html: getActiveEmbed() } 
-                        })
+                        h('div', { key: activeServer + '-' + selectedContent.id, className: 'w-full h-full', dangerouslySetInnerHTML: { __html: getActiveEmbed() } })
                     ),
 
-                    // CONTROLS WRAPPER
-                    h('div', { className: 'p-4 sm:p-6 flex-1' },
+                    // SERVER SELECTOR & CONTROLS
+                    h('div', { className: 'p-5 flex-1' },
                         
-                        // SELECT SERVER BOX (GUARANTEED VISIBLE)
-                        h('div', { className: 'mb-6 p-4 rounded-2xl bg-[#0f0f15] border border-zinc-800 shadow-xl' },
-                            h('div', { className: 'flex items-center justify-between mb-3' },
-                                h('h3', { className: 'text-xs font-black uppercase tracking-wider text-zinc-300 flex items-center gap-2' },
-                                    h('i', { 'data-lucide': 'server', className: 'w-4 h-4 text-green-400' }),
-                                    'Select Server'
-                                ),
-                                h('span', { className: 'text-[10px] text-zinc-500 font-bold' }, activeServer === 'server1' ? 'Playing on Abyss' : 'Playing on Xcloud')
+                        // SELECT SERVER SECTION (EXACTLY AS SCREENSHOT)
+                        h('div', { className: 'mb-6 p-4 rounded-2xl bg-[#0c0c10] border border-zinc-800/80' },
+                            h('h3', { className: 'text-xs font-black uppercase tracking-wider text-zinc-300 mb-3 flex items-center gap-1.5' },
+                                h('i', { 'data-lucide': 'hard-drive', className: 'w-3.5 h-3.5 text-green-400' }),
+                                'Select Server'
                             ),
                             h('div', { className: 'grid grid-cols-2 gap-3' },
                                 // SERVER 1 (ABYSS)
                                 h('button', {
                                     onClick: () => setActiveServer('server1'),
-                                    className: `p-3.5 rounded-xl text-left border transition-all relative ${
+                                    className: `p-3 rounded-xl text-left border transition-all relative ${
                                         activeServer === 'server1' 
-                                            ? 'bg-blue-950/60 border-cyan-400 shadow-lg shadow-cyan-500/20' 
-                                            : 'bg-[#15151c] border-zinc-800 hover:bg-zinc-800/60'
+                                            ? 'bg-blue-950/40 border-cyan-400 shadow-lg shadow-cyan-950/40' 
+                                            : 'bg-[#15151c] border-zinc-800/80 hover:bg-zinc-800/50'
                                     }`
                                 },
                                     h('p', { className: `text-[10px] font-black uppercase tracking-wider ${activeServer === 'server1' ? 'text-cyan-400' : 'text-zinc-400'}` }, 'SERVER 1'),
-                                    h('h4', { className: 'text-xs font-bold text-white mt-1' }, 'ABYSS'),
-                                    activeServer === 'server1' && h('div', { className: 'absolute bottom-0 left-3 right-3 h-0.5 bg-cyan-400 rounded-full' })
+                                    h('h4', { className: 'text-xs font-bold text-white mt-0.5' }, 'ABYSS'),
+                                    activeServer === 'server1' && h('div', { className: 'absolute bottom-0 left-2 right-2 h-0.5 bg-cyan-400 rounded-full' })
                                 ),
 
                                 // SERVER 2 (XCLOUD)
@@ -325,24 +318,28 @@
                                         if (selectedContent.embed2 && selectedContent.embed2.trim() !== '') {
                                             setActiveServer('server2');
                                         } else {
-                                            alert("⚠️ Server 2 (Xcloud) is not uploaded for this video yet. Please use Server 1.");
+                                            alert("⚠️ Server 2 (Xcloud) is not uploaded for this episode yet.");
                                         }
                                     },
-                                    className: `p-3.5 rounded-xl text-left border transition-all relative ${
+                                    className: `p-3 rounded-xl text-left border transition-all relative ${
                                         activeServer === 'server2' 
-                                            ? 'bg-blue-950/60 border-cyan-400 shadow-lg shadow-cyan-500/20' 
-                                            : 'bg-[#15151c] border-zinc-800 hover:bg-zinc-800/60'
-                                    } ${(!selectedContent.embed2 || selectedContent.embed2.trim() === '') ? 'opacity-50 cursor-not-allowed' : ''}`
+                                            ? 'bg-blue-950/40 border-cyan-400 shadow-lg shadow-cyan-950/40' 
+                                            : 'bg-[#15151c] border-zinc-800/80 hover:bg-zinc-800/50'
+                                    } ${(!selectedContent.embed2 || selectedContent.embed2.trim() === '') ? 'opacity-60 cursor-not-allowed' : ''}`
                                 },
                                     h('p', { className: `text-[10px] font-black uppercase tracking-wider ${activeServer === 'server2' ? 'text-cyan-400' : 'text-zinc-400'}` }, 'SERVER 2'),
-                                    h('h4', { className: 'text-xs font-bold text-white mt-1' }, 'XCLOUD'),
-                                    activeServer === 'server2' && h('div', { className: 'absolute bottom-0 left-3 right-3 h-0.5 bg-cyan-400 rounded-full' })
+                                    h('h4', { className: 'text-xs font-bold text-white mt-0.5' }, 'XCLOUD'),
+                                    activeServer === 'server2' && h('div', { className: 'absolute bottom-0 left-2 right-2 h-0.5 bg-cyan-400 rounded-full' })
                                 )
                             )
                         ),
 
-                        // SEASONS & EPISODES (FOR SERIES)
-                        !isMovieMode ? h('div', null,
+                        // SEASONS & EPISODES
+                        isMovieMode ? h('div', { className: 'mt-6 flex flex-col items-center justify-center text-center p-8 border border-zinc-900 rounded-3xl premium-glass' },
+                            h('i', { 'data-lucide': 'film', className: 'w-10 h-10 text-green-500 mb-3 drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]' }),
+                            h('h4', { className: 'text-sm font-bold text-zinc-200 mb-1' }, 'Movie Mode Active'),
+                            h('p', { className: 'text-[10px] text-zinc-500 max-w-xs' }, 'You are watching a full-length feature movie. Sit back and enjoy the show!')
+                        ) : h('div', null,
                             h('div', { className: 'mb-5 flex items-center justify-between' },
                                 h('div', { className: 'flex items-center gap-2 text-xs font-black tracking-widest text-zinc-400 uppercase' },
                                     h('i', { 'data-lucide': 'clapperboard', className: 'w-4 h-4 text-green-500' }),
@@ -374,10 +371,6 @@
                                     className: 'py-3.5 rounded-xl font-bold text-xs transition-all ' + (ep.id === selectedContent.id ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-black shadow-lg shadow-green-500/30 scale-[1.02]' : 'bg-[#121215] text-zinc-400 border border-zinc-800/80 hover:bg-zinc-800/40')
                                 }, 'Ep ' + ep.episode))
                             )
-                        ) : h('div', { className: 'mt-4 flex flex-col items-center justify-center text-center p-6 border border-zinc-800/60 rounded-2xl bg-[#0f0f14]' },
-                            h('i', { 'data-lucide': 'film', className: 'w-8 h-8 text-green-500 mb-2' }),
-                            h('h4', { className: 'text-xs font-bold text-zinc-200' }, 'Full Movie Active'),
-                            h('p', { className: 'text-[10px] text-zinc-500 mt-0.5' }, 'Enjoy high quality movie streaming with dual servers.')
                         )
                     )
                 ) : null,
@@ -426,7 +419,7 @@
                         currentSliderItem && !searchQuery && h('div', { className: 'px-5 py-3' },
                             h('div', { 
                                 onClick: () => { setSelectedContent(currentSliderItem); setCurrentPage('player'); },
-                                className: `w-full h-48 relative rounded-3xl overflow-hidden cursor-pointer card-shadow group transition-all ${getGlowClass(0)}`[span_4](start_span)[span_4](end_span)
+                                className: `w-full h-48 relative rounded-3xl overflow-hidden cursor-pointer card-shadow group transition-all ${getGlowClass(0)}`
                             },
                                 h('img', { 
                                     src: currentSliderItem.img, 
