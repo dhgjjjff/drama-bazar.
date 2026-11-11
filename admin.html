@@ -21,14 +21,14 @@
         <div class="flex justify-between items-center mb-6 pb-4 border-b border-zinc-800">
             <div>
                 <h1 class="text-3xl font-black italic text-green-500 tracking-tighter">DRAMA BAZAR</h1>
-                <p class="text-xs text-zinc-400 font-semibold mt-0.5">Pro CMS Dashboard & Auto-Sync Engine</p>
+                <p class="text-xs text-zinc-400 font-semibold mt-0.5">Pro CMS Dashboard & Multi-Server Engine</p>
             </div>
             <a href="index.html" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-xs font-bold rounded-xl border border-zinc-800 transition-all flex items-center gap-2">
                 <i data-lucide="external-link" class="w-4 h-4"></i> View Main Site
             </a>
         </div>
 
-        <!-- 1. Live Dashboard Stats -->
+        <!-- Dashboard Stats -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             <div class="premium-glass p-4 rounded-2xl border border-zinc-800 text-center">
                 <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Total Content</p>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <!-- 2. Content Form -->
+        <!-- Content Form -->
         <div class="premium-glass rounded-3xl p-6 mb-10 border border-zinc-800 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
                 <h2 id="formTitle" class="text-lg font-black text-zinc-200 flex items-center gap-2 uppercase tracking-wider">
@@ -121,9 +121,20 @@
                     <textarea id="description" rows="2" placeholder="Brief summary of the drama/movie..." class="w-full bg-[#121215] border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-green-500"></textarea>
                 </div>
 
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-bold text-green-400 mb-1">Embed Video Code / Iframe Tag *</label>
-                    <textarea id="embed" required rows="3" placeholder='<iframe src="https://..." allowfullscreen></iframe>' class="w-full bg-[#121215] border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white font-mono focus:outline-none focus:border-green-500"></textarea>
+                <!-- Server 1: Abyss -->
+                <div>
+                    <label class="block text-xs font-bold text-blue-400 mb-1 flex items-center gap-1.5">
+                        <i data-lucide="server" class="w-3.5 h-3.5 text-blue-400"></i> Server 1 (Abyss) Embed Code *
+                    </label>
+                    <textarea id="embed" required rows="3" placeholder='<iframe src="https://abyss.to/..." allowfullscreen></iframe>' class="w-full bg-[#121215] border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white font-mono focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+
+                <!-- Server 2: Xcloud -->
+                <div>
+                    <label class="block text-xs font-bold text-cyan-400 mb-1 flex items-center gap-1.5">
+                        <i data-lucide="server" class="w-3.5 h-3.5 text-cyan-400"></i> Server 2 (Xcloud) Embed Code (Optional)
+                    </label>
+                    <textarea id="embed2" rows="3" placeholder='<iframe src="https://xcloud.to/..." allowfullscreen></iframe>' class="w-full bg-[#121215] border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white font-mono focus:outline-none focus:border-cyan-500"></textarea>
                 </div>
 
                 <div class="sm:col-span-2 flex flex-col sm:flex-row items-center gap-4 mt-2">
@@ -139,14 +150,13 @@
             </form>
         </div>
 
-        <!-- 3. Filter & Realtime Database List -->
+        <!-- Realtime Database List with Search & Category Filters -->
         <div class="premium-glass rounded-3xl p-6 border border-zinc-800 shadow-2xl">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <h2 class="text-base font-black text-zinc-200 flex items-center gap-2 uppercase tracking-wider">
                     <i data-lucide="database" class="text-blue-500 w-4 h-4"></i> Live Database Entries (<span id="totalCount">0</span>)
                 </h2>
                 
-                <!-- Search & Category Filters -->
                 <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <div class="relative">
                         <input type="text" id="searchBar" placeholder="Search title or ID..." class="w-full sm:w-48 bg-[#121215] border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 pl-8">
@@ -197,7 +207,7 @@
 
         if (window.lucide) window.lucide.createIcons();
 
-        // 1. Submit / Update & Smart Sync
+        // Submit & Multi-Server Save
         contentForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
@@ -217,13 +227,14 @@
                 episode: String(currentEp),
                 description: document.getElementById('description').value,
                 embed: document.getElementById('embed').value,
+                embed2: document.getElementById('embed2').value || "", // Server 2 (Xcloud)
                 isActive: document.getElementById('isActive').checked,
                 updatedAt: new Date().toISOString()
             };
 
             try {
                 if (editDocId) {
-                    // SMART SYNC: Sync new poster URL across all episodes of the same seriesId
+                    // Smart Sync: sync poster and metadata across all same seriesId
                     const q = query(collection(db, "movies"), where("seriesId", "==", payload.seriesId));
                     const snap = await getDocs(q);
                     const updatePromises = [];
@@ -237,15 +248,16 @@
                     });
                     await Promise.all(updatePromises);
                     await updateDoc(doc(db, "movies", editDocId), payload);
-                    alert(`✅ Updated! Poster URL auto-synced across ${snap.docs.length} episode(s).`);
+                    alert(`✅ Updated! Poster auto-synced across ${snap.docs.length} episode(s).`);
                     resetFormState();
                 } else {
                     payload.createdAt = new Date().toISOString();
                     await addDoc(collection(db, "movies"), payload);
-                    alert(`✅ Success! Episode ${currentEp} Published.`);
+                    alert(`✅ Success! Episode ${currentEp} Published with Multi-Server.`);
                     
-                    // Smart retain fields for rapid next episode upload
+                    // Clear embed boxes & increment episode by 1
                     document.getElementById('embed').value = '';
+                    document.getElementById('embed2').value = '';
                     document.getElementById('episode').value = currentEp + 1;
                 }
             } catch (err) {
@@ -259,7 +271,7 @@
             }
         });
 
-        // 2. Realtime Listener
+        // Realtime Listener
         onSnapshot(collection(db, "movies"), (snapshot) => {
             allData = snapshot.docs.map(docSnap => ({
                 id: docSnap.id,
@@ -269,7 +281,6 @@
             renderList(allData);
         });
 
-        // 3. Update Dashboard Stats
         function updateStats(data) {
             totalCount.innerText = data.length;
             document.getElementById('statTotal').innerText = data.length;
@@ -278,7 +289,6 @@
             document.getElementById('statAnime').innerText = data.filter(d => d.category === 'Anime Series').length;
         }
 
-        // 4. Render Database Entries with Filter & Search
         function renderList(data) {
             const search = document.getElementById('searchBar').value.toLowerCase().trim();
             const filter = document.getElementById('filterCat').value;
@@ -307,7 +317,7 @@
                                     ${d.isActive !== false ? 'ACTIVE' : 'HIDDEN'}
                                 </span>
                             </div>
-                            <p class="text-[10px] text-zinc-500 mt-0.5">${d.category} | S${d.season || 1} E${d.episode || 1} | ID: ${d.seriesId}</p>
+                            <p class="text-[10px] text-zinc-500 mt-0.5">${d.category} | S${d.season || 1} E${d.episode || 1} | ${d.embed2 ? 'Dual Server ⚡' : 'Abyss Only'}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0 ml-2">
@@ -324,7 +334,6 @@
             if (window.lucide) window.lucide.createIcons();
         }
 
-        // 5. Edit Populate
         window.editItem = (id) => {
             const d = allData.find(x => x.id === id);
             if (!d) return;
@@ -339,9 +348,10 @@
             document.getElementById('episode').value = d.episode || 1;
             document.getElementById('description').value = d.description || '';
             document.getElementById('embed').value = d.embed || '';
+            document.getElementById('embed2').value = d.embed2 || '';
             document.getElementById('isActive').checked = d.isActive !== false;
 
-            document.getElementById('formTitle').innerHTML = `<i data-lucide="edit" class="text-amber-400 w-5 h-5"></i> Edit Content & Sync Poster`;
+            document.getElementById('formTitle').innerHTML = `<i data-lucide="edit" class="text-amber-400 w-5 h-5"></i> Edit Content & Multi-Server`;
             document.getElementById('submitBtn').innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Update & Auto-Sync`;
             document.getElementById('submitBtn').className = "flex-1 w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-black font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wider";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
@@ -350,7 +360,6 @@
             if (window.lucide) window.lucide.createIcons();
         };
 
-        // 6. Reset Functions
         window.clearFullForm = () => {
             contentForm.reset();
             document.getElementById('editDocId').value = '';
@@ -370,7 +379,6 @@
             if (window.lucide) window.lucide.createIcons();
         };
 
-        // 7. Delete Item
         window.deleteItem = async (id) => {
             if (confirm("Are you sure you want to delete this drama/episode?")) {
                 try {
@@ -381,7 +389,6 @@
             }
         };
 
-        // 8. Event Listeners for Filters
         document.getElementById('searchBar').addEventListener('input', () => renderList(allData));
         document.getElementById('filterCat').addEventListener('change', () => renderList(allData));
     </script>
